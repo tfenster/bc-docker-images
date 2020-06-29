@@ -1,0 +1,20 @@
+# escape=`
+ARG BASE
+ARG TYPE
+ARG COUNTRY
+ARG VERSION
+FROM tobiasfenster/bc-artifacts:$TYPE-$VERSION-$COUNTRY-$BASE AS artifacts
+ARG TYPE
+ARG COUNTRY
+ARG VERSION
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+RUN Remove-Item "C:\bcartifacts.cache\$env:TYPE\$env:VERSION\$env:COUNTRY\Applications.$env:COUNTRY\*.zip"
+
+FROM mcr.microsoft.com/windows/servercore:$BASE
+ARG TYPE
+ARG COUNTRY
+ARG VERSION
+COPY --from=artifacts C:\bcartifacts.cache\$TYPE\$VERSION\ALLanguage\extension\bin c:\bin
+COPY --from=artifacts C:\bcartifacts.cache\$TYPE\$VERSION\$COUNTRY\Applications.$COUNTRY c:\symbols
+
+CMD c:\bin\win32\alc.exe /project:c:\src /packagecachepath:c:\symbols /out:c:\src\app.app
